@@ -4,17 +4,21 @@ const Promise = require('bluebird');
 const app = express()
 
 function produce(name) {
-  return Promise.delay(500, { hello: name })
+  if (typeof name === 'string') {
+    return Promise.delay(500, { hello: name })
+  }
+  return Promise.reject('not a string');
 }
 
 app.get('/', function (req, res) {
   res.type('json');
 
   res.write('[');
-  Promise.mapSeries(['world', 'mundo', 'welt'], (name, i, len) => {
-    const seperator = i + 1 < len ? ',' : '';
+  Promise.mapSeries(['world', 'mundo', 5, 'welt'], (name, index) => {
+    const seperator = index === 0 ? '' : ',';
     return produce(name)
-    .tap(obj => res.write(JSON.stringify(obj) + seperator));
+    .tap(obj => res.write(seperator + JSON.stringify(obj)))
+    .catch(console.error);
   })
   .finally(() => {
     res.write(']');
