@@ -1,31 +1,33 @@
 'use strict';
-const express = require('express')
+const express = require('express');
 const Promise = require('bluebird');
-const app = express()
+const app = express();
 
 function produce(name) {
-  if (typeof name === 'string') {
-    return Promise.delay(500, { hello: name })
+  if (typeof name === 'number') {
+    return Promise.reject('numbers not allowed');
   }
-  return Promise.reject('not a string');
+  return Promise.delay(500, { hello: name });
 }
 
-app.get('/', function (req, res) {
+app.get('/', (req, res) => {
   res.type('json');
 
   res.write('[');
-  Promise.mapSeries(['world', 'mundo', 5, 'welt'], (name, index) => {
-    const seperator = index === 0 ? '' : ',';
+  const circular = {};
+  circular.circular = circular;
+  Promise.mapSeries(['world', 'mundo', 5, 'welt', circular], (name, index) => {
+    const separator = index === 0 ? '' : ',';
     return produce(name)
-    .tap(obj => res.write(seperator + JSON.stringify(obj)))
+    .tap(obj => res.write(separator + JSON.stringify(obj)))
     .catch(console.error);
   })
-  .finally(() => {
-    res.write(']');
-    res.end()
-  });
-})
+    .finally(() => {
+      res.write(']');
+      res.end();
+    });
+});
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
-})
+app.listen(3000, () => {
+  console.log('Streaming answers on port 3000');
+});
