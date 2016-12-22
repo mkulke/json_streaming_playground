@@ -6,6 +6,7 @@ const app = express();
 const HEAD = '[';
 const SEPARATOR = ',';
 const TAIL = ']';
+const WORDS = ['world', 'mundo', 5, 'mun', 'welt'];
 
 function produce(word) {
   if (typeof word !== 'string') {
@@ -14,39 +15,34 @@ function produce(word) {
   return Promise.delay(100 * word.length, { hello: word });
 }
 
-class Writer {
-  constructor(writable) {
-    this.writable = writable;
-    this.index = 0;
-  }
+function buildArrayWriter(res) {
+  let index = 0;
+  res.type('json');
 
-  open() {
-    this.writable.write(HEAD);
-  }
-
-  write(obj) {
-    const separator = this.index++ === 0 ? '' : SEPARATOR;
-    this.writable.write(separator + JSON.stringify(obj));
-  }
-
-  close() {
-    this.writable.write(TAIL);
-  }
+  return {
+    open() {
+      res.write(HEAD);
+    },
+    write(obj) {
+      const separator = index++ === 0 ? '' : SEPARATOR;
+      res.write(separator + JSON.stringify(obj));
+    },
+    close() {
+      res.write(TAIL);
+      res.end();
+    },
+  };
 }
 
 app.get('/', (req, res) => {
-  res.type('json');
-  const writer = new Writer(res);
+  const writer = new buildArrayWriter(res);
+
   writer.open();
-  Promise.map(['world', 'mundo', 5, 'mun', 'welt'], word => {
+  Promise.map(WORDS, word => {
     return produce(word)
-      .tap(obj => writer.write(obj))
+      .tap(writer.write)
       .catch(console.error);
-  })
-    .finally(() => {
-      writer.close();
-      res.end();
-    });
+  }).finally(writer.close);
 });
 
 app.listen(3000, () => {
