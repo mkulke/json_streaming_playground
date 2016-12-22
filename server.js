@@ -14,20 +14,37 @@ function produce(word) {
   return Promise.delay(100 * word.length, { hello: word });
 }
 
+class Writer {
+  constructor(writable) {
+    this.writable = writable;
+    this.index = 0;
+  }
+
+  open() {
+    this.writable.write(HEAD);
+  }
+
+  write(obj) {
+    const separator = this.index++ === 0 ? '' : SEPARATOR;
+    this.writable.write(separator + JSON.stringify(obj));
+  }
+
+  close() {
+    this.writable.write(TAIL);
+  }
+}
+
 app.get('/', (req, res) => {
   res.type('json');
-  res.write(HEAD);
-  let index = 0;
+  const writer = new Writer(res);
+  writer.open();
   Promise.map(['world', 'mundo', 5, 'mun', 'welt'], word => {
     return produce(word)
-      .tap(obj => {
-        const separator = index++ === 0 ? '' : SEPARATOR;
-        res.write(separator + JSON.stringify(obj));
-      })
+      .tap(obj => writer.write(obj))
       .catch(console.error);
   })
     .finally(() => {
-      res.write(TAIL);
+      writer.close();
       res.end();
     });
 });
