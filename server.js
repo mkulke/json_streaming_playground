@@ -1,19 +1,13 @@
 'use strict';
 const express = require('express');
-const Promise = require('bluebird');
+// const Promise = require('bluebird');
+const service = require('./service');
 const app = express();
 
 const HEAD = '[';
 const SEPARATOR = ',';
 const TAIL = ']';
 const WORDS = ['world', 'mundo', 5, 'mun', 'welt'];
-
-function produce(word) {
-  if (typeof word !== 'string') {
-    return Promise.reject('not a string');
-  }
-  return Promise.delay(100 * word.length, { hello: word });
-}
 
 function buildArrayWriter(res) {
   let index = 0;
@@ -36,13 +30,13 @@ function buildArrayWriter(res) {
 
 app.get('/', (req, res) => {
   const writer = new buildArrayWriter(res);
-
   writer.open();
-  Promise.map(WORDS, word => {
-    return produce(word)
-      .tap(writer.write)
-      .catch(console.error);
-  }).finally(writer.close);
+  const observable = service.getStatements(WORDS);
+  observable.subscribe(...[
+    value => writer.write(value),
+    err => console.error(err),
+    () => writer.close(),
+  ]);
 });
 
 app.listen(3000, () => {
