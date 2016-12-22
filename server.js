@@ -3,27 +3,31 @@ const express = require('express');
 const Promise = require('bluebird');
 const app = express();
 
-function produce(name) {
-  if (typeof name === 'number') {
-    return Promise.reject('numbers not allowed');
+const HEAD = '[';
+const SEPARATOR = ',';
+const TAIL = ']';
+
+function produce(word) {
+  if (typeof word !== 'string') {
+    return Promise.reject('not a string');
   }
-  return Promise.delay(500, { hello: name });
+  return Promise.delay(100 * word.length, { hello: word });
 }
 
 app.get('/', (req, res) => {
   res.type('json');
-
-  res.write('[');
-  const circular = {};
-  circular.circular = circular;
-  Promise.mapSeries(['world', 'mundo', 5, 'welt', circular], (name, index) => {
-    const separator = index === 0 ? '' : ',';
-    return produce(name)
-    .tap(obj => res.write(separator + JSON.stringify(obj)))
-    .catch(console.error);
+  res.write(HEAD);
+  let index = 0;
+  Promise.map(['world', 'mundo', 5, 'mun', 'welt'], word => {
+    return produce(word)
+      .tap(obj => {
+        const separator = index++ === 0 ? '' : SEPARATOR;
+        res.write(separator + JSON.stringify(obj));
+      })
+      .catch(console.error);
   })
     .finally(() => {
-      res.write(']');
+      res.write(TAIL);
       res.end();
     });
 });
