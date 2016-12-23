@@ -14,18 +14,13 @@ function _errorHandler(err) {
   return Rx.Observable.empty();
 }
 
-function _toObservable(promises) {
-  return Rx.Observable.from(promises)
-    .flatMap(promise => {
-      const observable = Rx.Observable.fromPromise(promise);
-      return observable.catch(_errorHandler);
-    });
+function _toObservable(promise) {
+  return Rx.Observable.fromPromise(promise).catch(_errorHandler);
 }
 
 function getStatements(words) {
   const promises = words.map(_produce);
-  const observable = _toObservable(promises);
-  return observable;
+  return Rx.Observable.from(promises).flatMap(_toObservable);
 }
 
 module.exports = {

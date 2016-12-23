@@ -15,13 +15,17 @@ function _toChunk(statement, index) {
 }
 
 app.get('/', (req, res) => {
-  const statements = service.getStatements(WORDS)
+  res.type('json');
+  const statements$ = service.getStatements(WORDS)
     .map(_toChunk)
     .startWith(HEAD)
     .concat(Rx.Observable.of(TAIL));
-  statements.subscribe(
+  statements$.subscribe(
       value => res.write(value),
-      err => console.error(err),
+      err => {
+        console.error(err);
+        res.end();
+      },
       () => res.end()
     );
 });
