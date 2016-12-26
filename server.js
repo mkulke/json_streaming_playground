@@ -14,13 +14,13 @@ function _toChunk(statement, index) {
   return separator + JSON.stringify(statement);
 }
 
-app.get('/', (req, res) => {
+function _stream(content$, res) {
   res.type('json');
-  const statements$ = service.getStatements(WORDS)
+  content$
     .map(_toChunk)
     .startWith(HEAD)
-    .concat(Rx.Observable.of(TAIL));
-  statements$.subscribe(
+    .concat(Rx.Observable.of(TAIL))
+    .subscribe(
       value => res.write(value),
       err => {
         console.error(err);
@@ -28,6 +28,11 @@ app.get('/', (req, res) => {
       },
       () => res.end()
     );
+}
+
+app.get('/', (req, res) => {
+  const statements$ = service.getStatements(WORDS);
+  _stream(statements$, res);
 });
 
 app.listen(3000, () => {
