@@ -15,12 +15,13 @@ function _errorHandler(err) {
 }
 
 function _toObservable(promise) {
-  return Rx.Observable.fromPromise(promise).catch(_errorHandler);
+  return Rx.Observable.from(promise).catch(_errorHandler);
 }
 
 function getStatements(words) {
   const promises = words.map(_produce);
-  return Rx.Observable.from(promises).flatMap(_toObservable);
+  const observables = promises.map(_toObservable);
+  return Rx.Observable.merge(...observables);
 }
 
 module.exports = {
