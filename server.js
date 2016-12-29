@@ -7,7 +7,7 @@ const app = express();
 const HEAD = '[';
 const SEPARATOR = ',';
 const TAIL = ']';
-const WORDS = ['world', 'mundo', 5, 'mun', 'welt'];
+const WORDS = ['world', 'mundo', 'heimurinn', 5, 'mun', 'welt', 'wereld'];
 
 function _toChunk(statement, index) {
   const separator = index === 0 ? '' : SEPARATOR;
@@ -30,10 +30,14 @@ function _stream(content$, res) {
     );
 }
 
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   const statements$ = service.getStatements(WORDS);
   _stream(statements$, res);
 });
+
+app.use('/client', express.static('public'));
+app.use('/client', express.static('node_modules/oboe/dist'));
+app.use('/client', express.static('node_modules/d3/build'));
 
 app.listen(3000, () => {
   console.log('Streaming answers on port 3000');

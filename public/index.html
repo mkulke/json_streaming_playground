@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="d3.min.js"></script>
+    <script src="oboe-browser.min.js"></script>
+    <script src="index.js"></script>
+  <style>
+    .chart {
+      font-family: Verdana,sans-serif;
+      font-size: 12px;
+      color: white;
+    }
+    .chart .word {
+      float: left;
+      padding: 3px;
+    }
+    .chart .bar {
+      background-color: steelblue;
+      text-align: right;
+      padding: 3px;
+      margin: 1px;
+      color: white;
+      transition: width 0.3s;
+    }
+  </style>
+  </head>
+  <body>
+    <div class="chart"></div>
+    <script>
+      start();
+    </script>
+  </body>
+</html>

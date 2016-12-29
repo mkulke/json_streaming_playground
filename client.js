@@ -10,5 +10,5 @@ oboe(passThrough)
     'hello': name => console.log(`${name} (${Date.now() - then}ms)`),
   });
 
-request('http://localhost:3000')
+request('http://localhost:3000/api')
   .pipe(passThrough);
