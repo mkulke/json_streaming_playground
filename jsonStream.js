@@ -4,27 +4,42 @@ const HEAD = '[';
 const SEPARATOR = ',';
 const TAIL = ']';
 
-function _toChunk(statement, index) {
-  const separator = index === 0 ? '' : SEPARATOR;
-  return separator + JSON.stringify(statement);
-}
-
 function stream(req, res, next) {
+  class StatefulSubscriber extends Rx.Subscriber {
+    constructor() {
+      super();
+      this.counter = 0;
+    }
+
+    next(element) {
+      if (this.counter === 0) {
+        res.write(HEAD);
+      } else {
+        res.write(SEPARATOR);
+      }
+      this.counter++;
+      const chunk = JSON.stringify(element);
+      res.write(chunk);
+    }
+
+    error(err) {
+      next(err);
+    }
+
+    complete() {
+      if (this.counter === 0) {
+        res.write(HEAD);
+      }
+      res.write(TAIL);
+      res.end();
+    }
+  }
+
   res.stream = content$ => {
     res.type('json');
-    content$
-      .map(_toChunk)
-      .startWith(HEAD)
-      .concat(Rx.Observable.of(TAIL))
-      .subscribe(
-        value => res.write(value),
-        err => {
-          console.error(err);
-          res.end();
-        },
-        () => res.end()
-      );
+    content$.subscribe(new StatefulSubscriber);
   };
+
   next();
 }
 

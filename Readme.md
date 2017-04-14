@@ -5,7 +5,7 @@ Prepare
 ==
 
 ```
-npm install
+yarn
 ```
 
 Run Server
